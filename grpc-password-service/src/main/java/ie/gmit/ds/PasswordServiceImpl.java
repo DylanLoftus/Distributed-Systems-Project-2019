@@ -1,17 +1,36 @@
 package ie.gmit.ds;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
+import java.util.logging.Logger;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 import io.grpc.stub.StreamObserver;
 
 public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase  {
 	
+	private ArrayList<PasswordCreateRequest> passwordData;
+	private static final int ITERATIONS = 10000;
+	private static final int KEY_LENGTH = 256;
+	private static final Logger logger =
+            Logger.getLogger(PasswordServiceImpl.class.getName());
 	private static final Random RANDOM = new SecureRandom();
+	
+	public PasswordServiceImpl() {
+		passwordData = new ArrayList<>();
+    }
 
 	@Override
 	public void hash(PasswordCreateRequest request, StreamObserver<PasswordCreateResponse> responseObserver) {
-		
+		passwordData.add(request);
+        logger.info("Added new item: " + request);
+    
 	}
 
 	@Override
@@ -41,14 +60,30 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
         return sb.toString();
     }
 	
+	public static byte[] hashPass(char[] password, byte[] salt) {
+        PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
+        try {
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            return skf.generateSecret(spec).getEncoded();
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new AssertionError("Error while hashing a password: " + e.getMessage(), e);
+        } finally {
+            spec.clearPassword();
+        }
+    }
+	
 	public static void main(String[] args) {
-		String randomPass;
-		
-		PasswordServiceImpl ps = new PasswordServiceImpl();
-		
-		randomPass = PasswordServiceImpl.makeRandomPassword(5);
-		
-		ps.hash(randomPass, responseObserver);
-		
+		String randomPass = makeRandomPassword(10);
+        byte[] salt = makeSalt();
+        char[] passArray = randomPass.toCharArray();
+        
+        byte[] pwdHash = hashPass(passArray, salt);
+        
+        System.out.println(randomPass);
+        
+        System.out.println(Arrays.toString(salt));
+        
+        System.out.println(Arrays.toString(pwdHash));
 	}
+	
 }
