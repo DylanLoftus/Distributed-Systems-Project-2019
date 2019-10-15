@@ -6,12 +6,14 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
 
 	@Override
 	public void hash(PasswordCreateRequest request, StreamObserver<PasswordCreateResponse> responseObserver) {
-		super.hash(request, responseObserver);
+		
+		
 	}
 
 	@Override
 	public void validate(PasswordValidateRequest request, StreamObserver<PasswordValidateResponse> responseObserver) {
-		super.validate(request, responseObserver);
+		
+		
 	}
 
 	
