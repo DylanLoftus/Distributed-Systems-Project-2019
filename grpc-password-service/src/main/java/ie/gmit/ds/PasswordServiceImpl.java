@@ -17,7 +17,6 @@ import io.grpc.stub.StreamObserver;
 
 public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase  {
 	
-	private ArrayList<PasswordCreateRequest> passwordData;
 	private static final int ITERATIONS = 10000;
 	private static final int KEY_LENGTH = 256;
 	private static final Logger logger =
@@ -25,13 +24,15 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
 	private static final Random RANDOM = new SecureRandom();
 	
 	public PasswordServiceImpl() {
-		passwordData = new ArrayList<>();
+		
     }
 
 	@Override
 	public void hash(PasswordCreateRequest request, StreamObserver<PasswordCreateResponse> responseObserver) {
-		passwordData.add(request);
-        logger.info("Added new item: " + request);
+		String password = PasswordCreateRequest.newBuilder().getPassword();
+		char[] passwordChar = password.toCharArray();
+		hashPass(passwordChar, makeSalt());
+        responseObserver.onCompleted();
     
 	}
 	
