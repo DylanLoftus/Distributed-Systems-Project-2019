@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import com.google.protobuf.BoolValue;
+
 import io.grpc.stub.StreamObserver;
 
 public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase  {
@@ -32,13 +34,14 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
         logger.info("Added new item: " + request);
     
 	}
-
-	@Override
-	public void validate(PasswordValidateRequest request, StreamObserver<PasswordValidateResponse> responseObserver) {
-		
-		
-	}
 	
+	
+	
+	@Override
+	public void validate(PasswordValidateRequest request, StreamObserver<BoolValue> responseObserver) {
+		super.validate(request, responseObserver);
+	}
+
 	public static byte[] makeSalt() {
         byte[] salt = new byte[32];
         RANDOM.nextBytes(salt);
