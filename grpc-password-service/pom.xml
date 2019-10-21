@@ -37,6 +37,12 @@
            <artifactId>grpc-stub</artifactId>
            <version>1.23.0</version>
        </dependency>
+       <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-core -->
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-lambda-java-core</artifactId>
+		    <version>1.2.0</version>
+		</dependency>
    </dependencies>
 
    <build>
@@ -68,7 +74,43 @@
                    </execution>
                </executions>
            </plugin>
+           
+           <!-- Make this jar executable -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+				  <archive>
+					<manifest>
+						<!-- Jar file entry point -->
+						<mainClass>ie.gmit.ds.PasswordServer</mainClass>
+					</manifest>
+				  </archive>
+				</configuration>
+			</plugin>
 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.1</version>
+				<executions>
+			      <!-- Run shade goal on package phase -->
+			      <execution>
+			        <phase>package</phase>
+			        <goals>
+			          <goal>shade</goal>
+			        </goals>
+			        <configuration>
+			          <transformers>
+			            <!-- add Main-Class to manifest file -->
+			            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+			              <mainClass>ie.gmit.ds.PasswordServer</mainClass>
+			            </transformer>
+			          </transformers>
+			        </configuration>
+			      </execution>
+			    </executions>
+			</plugin>
        </plugins>
    </build>
 </project>
