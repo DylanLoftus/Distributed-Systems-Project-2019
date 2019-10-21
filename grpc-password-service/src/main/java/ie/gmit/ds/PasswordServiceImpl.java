@@ -1,5 +1,6 @@
 package ie.gmit.ds;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import com.google.protobuf.BoolValue;
@@ -19,6 +20,7 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
 
 	@Override
 	public void hash(PasswordCreateRequest request, StreamObserver<PasswordCreateResponse> responseObserver) {
+		System.out.println("PASSWORDCREATE");
 		byte[] salt = Passwords.getNextSalt();
 		String password = request.getPassword();
 		byte[] hashedPassword = Passwords.hash(password.toCharArray(), salt);
@@ -35,13 +37,20 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
 	
 	@Override
 	public void validate(PasswordValidateRequest request, StreamObserver<BoolValue> responseObserver) {
-		try {
-            
-            //logger.info("Passwords are correct");
-            responseObserver.onNext(BoolValue.newBuilder().setValue(true).build());
-        } catch (RuntimeException ex) {
-            responseObserver.onNext(BoolValue.newBuilder().setValue(false).build());
-        }
+
+        System.out.println("SERVER VALIDATION");
+		byte[] userHashedPassword = Passwords.hash(request.getPassword().toCharArray(), request.getSalt().toByteArray()); 
+		
+		ByteString bsUserHashedPassword = ByteString.copyFrom(userHashedPassword);
+		
+		if(Arrays.equals(request.getHashedPassword().toByteArray(), bsUserHashedPassword.toByteArray())) {
+			System.out.println("TRUE");
+			responseObserver.onNext(BoolValue.newBuilder().setValue(true).build());
+		}else {
+			System.out.println("FALSE");
+			responseObserver.onNext(BoolValue.newBuilder().setValue(false).build());
+		}
+
         responseObserver.onCompleted();
 	}
 	

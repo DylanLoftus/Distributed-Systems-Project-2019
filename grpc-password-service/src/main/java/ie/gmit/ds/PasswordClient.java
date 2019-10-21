@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.BoolValue;
+import com.google.protobuf.ByteString;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -33,7 +34,8 @@ public class PasswordClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
     
-    
+    public ByteString hashedPassword;
+    public ByteString salt;
     
     private void makePassword(String password, int userID) {
 		StreamObserver<PasswordCreateResponse> responseObserver = new StreamObserver<PasswordCreateResponse>() {
@@ -43,6 +45,11 @@ public class PasswordClient {
 				System.out.println(value.getHashedPassword().toByteArray());
 				System.out.println(value.getUserId());
 				System.out.println(value.getSalt().toByteArray());
+				hashedPassword = value.getHashedPassword();
+				salt = value.getSalt();
+				System.out.println("before");
+				validate(hashedPassword,salt);
+				System.out.println("after");
 			}
 
 			@Override
@@ -53,12 +60,46 @@ public class PasswordClient {
 
 			@Override
 			public void onCompleted() {
-				//validatePassword(value.get)
 			}
+
+
 		};
+		
+		
 		
 		PasswordCreateRequest request = PasswordCreateRequest.newBuilder().setUserId(userID).setPassword(password).build();
 		asyncPasswordService.hash(request, responseObserver);
+		
+	}
+    
+	private void validate(ByteString hashedPassword, ByteString salt) {
+
+		StreamObserver<BoolValue> responseObserver = new StreamObserver<BoolValue>() {
+
+			@Override
+			public void onNext(BoolValue value) {
+				System.out.println(value.getValue());
+			}
+
+			@Override
+			public void onError(Throwable t) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onCompleted() {
+
+			}
+
+
+		};
+		
+		System.out.println("I'M IN");
+		
+		String password = "lala";
+		PasswordValidateRequest request = PasswordValidateRequest.newBuilder().setHashedPassword(hashedPassword).setPassword(password).setSalt(salt).build();
+		asyncPasswordService.validate(request, responseObserver);
 		
 	}
 	
