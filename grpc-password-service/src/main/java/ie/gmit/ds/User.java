@@ -8,7 +8,9 @@ public class User {
     private String userName;
     private String email;
     private String password;
-	
+    private String hash;
+    private String salt;
+
 	// No arg constructor for deserialization
 	public User() {
 		
@@ -40,5 +42,15 @@ public class User {
 	@JsonProperty
 	public String getPassword() {
 		return password;
+	}
+	
+	@JsonProperty
+	public String getHash() {
+		return hash;
+	}
+	
+	@JsonProperty
+	public String getSalt() {
+		return salt;
 	}
 }
