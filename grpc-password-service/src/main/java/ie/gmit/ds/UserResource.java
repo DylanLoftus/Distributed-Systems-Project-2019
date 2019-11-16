@@ -39,6 +39,8 @@ public class UserResource {
 	@POST
 	public void addUser() {
 		
+		
+		
 	}
 	
 	@Path("/{userId}")
@@ -49,6 +51,13 @@ public class UserResource {
 	}
 	
 	@Path("/{userId}")
+	@DELETE
+	public List<User> deleteUser(@PathParam("userId") int id){
+		userMap.remove(id);
+		return (List<User>) userMap.values();
+	}
+	
+	@Path("/login")
 	@DELETE
 	public List<User> deleteUser(@PathParam("userId") int id){
 		userMap.remove(id);
