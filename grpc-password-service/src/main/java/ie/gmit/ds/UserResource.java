@@ -20,15 +20,11 @@ public class UserResource {
 
 	private HashMap<Integer, User> userMap = new HashMap<>();
 
+	PasswordClient client = new PasswordClient("localhost", 50551);
+	
 	public UserResource() {
 		User testUser = new User(1, "Lala", "lala@gmail.com", "super");
-		User testUser2 = new User(2, "Lala2", "lala2@gmail.com", "super2");
-		User testUser3 = new User(3, "Lala3", "lala3@gmail.com", "super3");
-		User testUser4 = new User(4, "Lala4", "lala4@gmail.com", "super4");
 		userMap.put(testUser.getUserId(), testUser);
-		userMap.put(testUser2.getUserId(), testUser2);
-		userMap.put(testUser3.getUserId(), testUser3);
-		userMap.put(testUser4.getUserId(), testUser4);
 	}
 	
 	@GET
@@ -37,10 +33,10 @@ public class UserResource {
 	}
 	
 	@POST
-	public void addUser() {
-		
-		
-		
+	public void addUser(User user) {
+		client.makePassword(user);
+		User newUser = new User(user.getUserId(), user.getUserName(), user.getEmail(), user.getHash(), user.getSalt());
+		userMap.put(newUser.getUserId(), newUser);
 	}
 	
 	@Path("/{userId}")
@@ -58,10 +54,9 @@ public class UserResource {
 	}
 	
 	@Path("/login")
-	@DELETE
-	public List<User> deleteUser(@PathParam("userId") int id){
-		userMap.remove(id);
-		return (List<User>) userMap.values();
+	@POST
+	public Boolean loginUser(){
+		return null;
 	}
 
 	

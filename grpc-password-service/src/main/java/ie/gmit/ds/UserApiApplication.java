@@ -12,7 +12,10 @@ public class UserApiApplication extends Application<UserApiConfig> {
     public void run(UserApiConfig userApiConfig, Environment environment) throws Exception {
 
         final UserResource resource = new UserResource();
-
         environment.jersey().register(resource);
+        
+        final HealthCheckImpl healthCheck = new HealthCheckImpl();
+        environment.healthChecks().register("example", healthCheck);
     }
+    
 }

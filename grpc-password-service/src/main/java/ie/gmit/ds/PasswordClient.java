@@ -15,12 +15,14 @@ import io.grpc.stub.StreamObserver;
 
 public class PasswordClient {
 
+	// Instance variables
 	private static final Logger logger =
             Logger.getLogger(PasswordClient.class.getName());
     private final ManagedChannel channel;
     private final PasswordServiceGrpc.PasswordServiceStub asyncPasswordService;
     private final PasswordServiceGrpc.PasswordServiceBlockingStub syncPasswordService;
 
+    // Constructor
     public PasswordClient(String host, int port) {
         channel = ManagedChannelBuilder
                 .forAddress(host, port)
@@ -37,9 +39,11 @@ public class PasswordClient {
     public ByteString hashedPassword;
     public ByteString salt;
     
-    private void makePassword(String password, int userID) {
+    // Takes in a user object and hashes the users password
+    
+    public void makePassword(User user) {
 		StreamObserver<PasswordCreateResponse> responseObserver = new StreamObserver<PasswordCreateResponse>() {
-
+			
 			@Override
 			public void onNext(PasswordCreateResponse value) {
 				System.out.println(value.getHashedPassword().toByteArray());
@@ -47,9 +51,6 @@ public class PasswordClient {
 				System.out.println(value.getSalt().toByteArray());
 				hashedPassword = value.getHashedPassword();
 				salt = value.getSalt();
-				System.out.println("before");
-				validate(hashedPassword,salt);
-				System.out.println("after");
 			}
 
 			@Override
@@ -66,11 +67,14 @@ public class PasswordClient {
 		};
 		
 		
-		
-		PasswordCreateRequest request = PasswordCreateRequest.newBuilder().setUserId(userID).setPassword(password).build();
+		System.out.println(user.getUserId());
+		System.out.println(user.getPassword());
+		PasswordCreateRequest request = PasswordCreateRequest.newBuilder().setUserId(user.getUserId()).setPassword(user.getPassword()).build();
 		asyncPasswordService.hash(request, responseObserver);
 		
 	}
+    
+    // Used to validate a password with an already hashedPassword
     
 	private void validate(ByteString hashedPassword, ByteString salt) {
 
@@ -104,23 +108,70 @@ public class PasswordClient {
 	}
 	
     public static void main(String[] args) throws Exception {
+    	Scanner console = new Scanner(System.in);
     	
-    	Scanner console = new Scanner(System.in);  
+    	UserResource resource = new UserResource();
     	
-    	PasswordClient client = new PasswordClient("localhost", 50551);
-        
-    	System.out.println("Enter password: ");
-    	String password = console.next();
+    	Boolean loop = true;
     	
-    	System.out.println("Enter user ID: ");
-    	int userId = console.nextInt();
+    	System.out.println("WELCOME TO THE USER SERVICE");
     	
+    	System.out.println("What operation would you like to do?");
+    	
+    	System.out.println("Press 1 to create a new user/2 to get info on a user/3 to update a user/4 to delete a user/5 to liset all users/6 to Login/7 to Exit");
+    	int input = console.nextInt();
+    	
+    	while(loop) {
+    		
+    		switch(input) {
+	    		case 1:
+	    			// Add user create implementation
+	    			System.out.println("Enter user ID");
+	    			int userId = console.nextInt();
+	    			System.out.println("Enter user name");
+	    			String userName = console.next();
+	    			System.out.println("Enter user email");
+	    			String userEmail = console.next();
+	    			System.out.println("Enter user password");
+	    			String password = console.next();
+	    			
+	    			// Hopefully this works.
+	    			User createUser = new User(userId, userName, userEmail, password);
+	    			resource.addUser(createUser);
+	    
+	    			break;
+	    		case 2:
+	    			// Add user info implementation
+	    			break;
+	    		case 3:
+	    			// Add user update implementation
+	    			break;
+	    		case 4:
+	    			// Add user delete implementation
+	    			break;
+	    		case 5:
+	    			// Add list all users implementation
+	    			break;
+	    		case 6:
+	    			// Add login implementation
+	    			break;
+	    		case 7:
+	    			loop = false;
+	    			break;
+    		}
+    		
+    		System.out.println("Press 1 to create a new user/2 to get info on a user/3 to update a user/4 to delete a user/5 to liset all users/6 to Login/7 to Exit");
+        	input = console.nextInt();
+    	}
+    	
+    	/*
         try {
             client.makePassword(password, userId);
         } finally {
             // Don't stop process, keep alive to receive async response
             Thread.currentThread().join();
         }
+        */
     }
 
 }
