@@ -1,16 +1,21 @@
 package ie.gmit.ds;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.protobuf.ByteString;
 
 // This class is IMMUTABLE, it cannot be changed.
+@XmlRootElement (name = "Employee")
 public class User {
 	
 	private int userId;
     private String userName;
     private String email;
     private String password;
-    private String hash;
-    private String salt;
+    private ByteString hash;
+    private ByteString salt;
 
 	// No arg constructor for deserialization
 	public User() {
@@ -27,7 +32,7 @@ public class User {
 	}
 	
 	// For returning all users and specific user
-	public User(int userId, String userName, String email, String hash, String salt) {
+	public User(int userId, String userName, String email, ByteString hash, ByteString salt) {
 		super();
 		this.userId = userId;
 		this.userName = userName;
@@ -36,33 +41,39 @@ public class User {
 		this.salt = salt;
 	}
 
+	@XmlElement
 	@JsonProperty
 	public int getUserId() {
 		return userId;
 	}
 
+	@XmlElement
 	@JsonProperty
 	public String getUserName() {
 		return userName;
 	}
 
+	@XmlElement
 	@JsonProperty
 	public String getEmail() {
 		return email;
 	}
 
+	@XmlElement
 	@JsonProperty
 	public String getPassword() {
 		return password;
 	}
 	
+	@XmlElement
 	@JsonProperty
-	public String getHash() {
+	public ByteString getHash() {
 		return hash;
 	}
 	
+	@XmlElement
 	@JsonProperty
-	public String getSalt() {
+	public ByteString getSalt() {
 		return salt;
 	}
 }
