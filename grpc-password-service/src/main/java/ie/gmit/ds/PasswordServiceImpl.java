@@ -47,16 +47,12 @@ public class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImpl
 	@Override
 	public void validate(PasswordValidateRequest request, StreamObserver<BoolValue> responseObserver) {
 		
-		System.out.println("GOT INTO VALIDATEIMPL METHOD");
 		// Take in the user's hashed password from the request and hash it using the Passwords class.
 		byte[] userHashedPassword = Passwords.hash(request.getPassword().toCharArray(), request.getSalt().toByteArray()); 
 		
-		System.out.println("HASHED SENT IN PASSWORD");
+		
 		// Convert the byte array to a byte string.
 		ByteString bsUserHashedPassword = ByteString.copyFrom(userHashedPassword);
-		
-		System.out.println("USER ALREADY HASHED PASSWORD" + request.getHashedPassword().toByteArray().toString());
-		System.out.println("SENT INTO VALIDATE" + bsUserHashedPassword.toByteArray().toString());
 		
 		// If the the user's hashed password matches the newly hashed password in the request return true, otherwise return false.
 		
