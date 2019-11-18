@@ -39,18 +39,36 @@ public class PasswordClient {
     public ByteString hashedPassword;
     public ByteString salt;
     
+    public byte[] hashedPwBArray;
+    public byte[] saltBArray;
+    
+    public String hashedString, saltString;
+    
+    public User userLocal;
+    
+    public boolean validateBoolean;
     // Takes in a user object and hashes the users password
     
-    public void makePassword(User user) {
+    public User makePassword(User user) {
 		StreamObserver<PasswordCreateResponse> responseObserver = new StreamObserver<PasswordCreateResponse>() {
 			
 			@Override
 			public void onNext(PasswordCreateResponse value) {
-				System.out.println(value.getHashedPassword().toByteArray());
-				System.out.println(value.getUserId());
-				System.out.println(value.getSalt().toByteArray());
+//				System.out.println(value.getHashedPassword().toByteArray().toString());
+//				System.out.println(value.getUserId());
+//				System.out.println(value.getSalt().toByteArray());
 				hashedPassword = value.getHashedPassword();
 				salt = value.getSalt();
+				
+				hashedPwBArray = hashedPassword.toByteArray();
+				saltBArray = salt.toByteArray();
+				
+				hashedString = new String(hashedPwBArray);
+				saltString = new String(saltBArray);
+				
+				System.out.println(hashedString.toString());
+				System.out.println(saltString.toString());
+				
 			}
 
 			@Override
@@ -61,6 +79,7 @@ public class PasswordClient {
 
 			@Override
 			public void onCompleted() {
+				
 			}
 
 
@@ -69,20 +88,31 @@ public class PasswordClient {
 		
 		System.out.println(user.getUserId());
 		System.out.println(user.getPassword());
+		
 		PasswordCreateRequest request = PasswordCreateRequest.newBuilder().setUserId(user.getUserId()).setPassword(user.getPassword()).build();
 		asyncPasswordService.hash(request, responseObserver);
+		try {
+			TimeUnit.SECONDS.sleep(1);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Called async");
+		userLocal = new User(user.getUserId(), user.getUserName(), user.getEmail(), hashedString.toString(), saltString.toString());
+		System.out.println("made local user");
+		return userLocal;
 		
 	}
     
     // Used to validate a password with an already hashedPassword
     
-	private void validate(ByteString hashedPassword, ByteString salt) {
+	public Boolean validate(Login login, User user) {
 
 		StreamObserver<BoolValue> responseObserver = new StreamObserver<BoolValue>() {
 
 			@Override
 			public void onNext(BoolValue value) {
 				System.out.println(value.getValue());
+				validateBoolean = value.getValue();
 			}
 
 			@Override
@@ -99,79 +129,23 @@ public class PasswordClient {
 
 		};
 		
-		System.out.println("I'M IN");
+		System.out.println("HELLO I'M VALIDATE");
 		
-		String password = "lala";
-		PasswordValidateRequest request = PasswordValidateRequest.newBuilder().setHashedPassword(hashedPassword).setPassword(password).setSalt(salt).build();
+		String hashValidate = user.getHash();
+		byte[] b = hashValidate.getBytes();
+		ByteString hashPwBs = ByteString.copyFrom(b);
+		
+		String saltValidate = user.getSalt();
+		byte[] s = saltValidate.getBytes();
+		ByteString saltPwBs = ByteString.copyFrom(s);
+		
+		PasswordValidateRequest request = PasswordValidateRequest.newBuilder().setHashedPassword(hashPwBs).setPassword(login.getPassword()).setSalt(saltPwBs).build();
+		System.out.println("CREATED REQUEST");
 		asyncPasswordService.validate(request, responseObserver);
+		System.out.println("SENT REQUEST");
+		
+		return validateBoolean;
 		
 	}
-	
-    public static void main(String[] args) throws Exception {
-    	Scanner console = new Scanner(System.in);
-    	
-    	UserResource resource = new UserResource();
-    	
-    	Boolean loop = true;
-    	
-    	System.out.println("WELCOME TO THE USER SERVICE");
-    	
-    	System.out.println("What operation would you like to do?");
-    	
-    	System.out.println("Press 1 to create a new user/2 to get info on a user/3 to update a user/4 to delete a user/5 to liset all users/6 to Login/7 to Exit");
-    	int input = console.nextInt();
-    	
-    	while(loop) {
-    		
-    		switch(input) {
-	    		case 1:
-	    			// Add user create implementation
-	    			System.out.println("Enter user ID");
-	    			int userId = console.nextInt();
-	    			System.out.println("Enter user name");
-	    			String userName = console.next();
-	    			System.out.println("Enter user email");
-	    			String userEmail = console.next();
-	    			System.out.println("Enter user password");
-	    			String password = console.next();
-	    			
-	    			// Hopefully this works.
-	    			User createUser = new User(userId, userName, userEmail, password);
-	    			resource.addUser(createUser);
-	    
-	    			break;
-	    		case 2:
-	    			// Add user info implementation
-	    			break;
-	    		case 3:
-	    			// Add user update implementation
-	    			break;
-	    		case 4:
-	    			// Add user delete implementation
-	    			break;
-	    		case 5:
-	    			// Add list all users implementation
-	    			break;
-	    		case 6:
-	    			// Add login implementation
-	    			break;
-	    		case 7:
-	    			loop = false;
-	    			break;
-    		}
-    		
-    		System.out.println("Press 1 to create a new user/2 to get info on a user/3 to update a user/4 to delete a user/5 to liset all users/6 to Login/7 to Exit");
-        	input = console.nextInt();
-    	}
-    	
-    	/*
-        try {
-            client.makePassword(password, userId);
-        } finally {
-            // Don't stop process, keep alive to receive async response
-            Thread.currentThread().join();
-        }
-        */
-    }
 
 }

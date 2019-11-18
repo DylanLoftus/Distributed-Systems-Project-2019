@@ -13,6 +13,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 @Path("/user")
 @Produces(MediaType.APPLICATION_JSON)
@@ -34,10 +36,14 @@ public class UserResource {
 	}
 	
 	@POST
-	public void addUser(User user) {
-		client.makePassword(user);
-		User newUser = new User(user.getUserId(), user.getUserName(), user.getEmail(), user.getHash(), user.getSalt());
+	public Response addUser(User user) {
+		if(user == null) {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		User newUser = client.makePassword(user);
+		System.out.println("After client.makepassword");
 		userMap.put(newUser.getUserId(), newUser);
+		return Response.ok(user).build();
 	}
 	
 	@Path("/{userId}")
@@ -48,26 +54,48 @@ public class UserResource {
 	
 	@Path("/{userId}")
 	@PUT
-	public List<User> changeUser(User user, @PathParam("userId") int id) {
-		userMap.remove(id);
-		client.makePassword(user);
-		User newUserPut = new User(user.getUserId(), user.getUserName(), user.getEmail(), user.getHash(), user.getSalt());
-		userMap.put(newUserPut.getUserId(), newUserPut);
-		return new ArrayList<User>(userMap.values());
+	public Response changeUser(User user, @PathParam("userId") int id) {
+		if(user == null || userMap.get(id) == null) {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		else {
+			userMap.remove(id);
+			User newUserPut = client.makePassword(user);
+			userMap.put(newUserPut.getUserId(), newUserPut);
+			return Response.ok(user).build();
+		}
+		
 	}
 	
 	@Path("/{userId}")
 	@DELETE
-	public List<User> deleteUser(@PathParam("userId") int id){
-		userMap.remove(id);
-		return new ArrayList<User>(userMap.values());
+	public Response deleteUser(@PathParam("userId") int id){
+		if(userMap.get(id) == null) {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		else {
+			userMap.remove(id);
+			return Response.ok().build();
+		}
 	}
 	
-	@Path("/login")
+	@Path("/{userId}/login")
 	@POST
-	public Boolean loginUser(){
-		return null;
+	public Response loginUser(Login login, @PathParam("userId") int id){
+		
+		boolean loginTrue;
+		
+		User checkUser = userMap.get(id);
+		
+		loginTrue = client.validate(login, checkUser);
+		
+		System.out.println("LOGINTRUE: " + loginTrue);
+		
+		if(loginTrue) {
+			return Response.ok().build();
+		}
+		else {
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
 	}
-
-	
 }
