@@ -16,12 +16,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.protobuf.BoolValue;
+
 @Path("/user")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class UserResource {
 
 	private HashMap<Integer, User> userMap = new HashMap<>();
+	private boolean loginTrue;
 
 	PasswordClient client = new PasswordClient("localhost", 50551);
 	
@@ -79,15 +82,13 @@ public class UserResource {
 		}
 	}
 	
-	@Path("/{userId}/login")
+	@Path("/{userId}/login/{password}")
 	@POST
-	public Response loginUser(Login login, @PathParam("userId") int id){
-		
-		boolean loginTrue;
+	public Response loginUser(@PathParam("userId") int id, @PathParam("password") String password){
 		
 		User checkUser = userMap.get(id);
 		
-		loginTrue = client.validate(login, checkUser);
+		loginTrue = client.validate(password, checkUser);
 		
 		System.out.println("LOGINTRUE: " + loginTrue);
 		

@@ -45,8 +45,6 @@ public class PasswordClient {
     public String hashedString, saltString;
     
     public User userLocal;
-    
-    public boolean validateBoolean;
     // Takes in a user object and hashes the users password
     
     public User makePassword(User user) {
@@ -105,29 +103,7 @@ public class PasswordClient {
     
     // Used to validate a password with an already hashedPassword
     
-	public Boolean validate(Login login, User user) {
-
-		StreamObserver<BoolValue> responseObserver = new StreamObserver<BoolValue>() {
-
-			@Override
-			public void onNext(BoolValue value) {
-				System.out.println(value.getValue());
-				validateBoolean = value.getValue();
-			}
-
-			@Override
-			public void onError(Throwable t) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onCompleted() {
-
-			}
-
-
-		};
+	public boolean validate(String password, User user) {
 		
 		System.out.println("HELLO I'M VALIDATE");
 		
@@ -139,12 +115,14 @@ public class PasswordClient {
 		byte[] s = saltValidate.getBytes();
 		ByteString saltPwBs = ByteString.copyFrom(s);
 		
-		PasswordValidateRequest request = PasswordValidateRequest.newBuilder().setHashedPassword(hashPwBs).setPassword(login.getPassword()).setSalt(saltPwBs).build();
+		PasswordValidateRequest request = PasswordValidateRequest.newBuilder().setHashedPassword(hashPwBs).setPassword(password).setSalt(saltPwBs).build();
 		System.out.println("CREATED REQUEST");
-		asyncPasswordService.validate(request, responseObserver);
+		BoolValue validateBoolean = syncPasswordService.validate(request);
 		System.out.println("SENT REQUEST");
 		
-		return validateBoolean;
+		System.out.println("VALIDATE BOOLEAN : " + validateBoolean);
+		
+		return validateBoolean.getValue();
 		
 	}
 
