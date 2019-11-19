@@ -39,6 +39,8 @@ public class UserResource {
 	}
 	
 	@POST
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response addUser(User user) {
 		if(user == null) {
 			return Response.status(Response.Status.NOT_FOUND).build();

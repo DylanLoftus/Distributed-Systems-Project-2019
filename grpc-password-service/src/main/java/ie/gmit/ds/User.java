@@ -3,12 +3,14 @@ package ie.gmit.ds;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
 
 // This class is IMMUTABLE, it cannot be changed.
-@XmlRootElement (name = "Employee")
+@XmlRootElement (name = "User")
+@XmlType(propOrder = { "userId", "userName", "email", "password" })
 public class User {
 	@NotNull
 	private int userId;
