@@ -9,8 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
 
 // This class is IMMUTABLE, it cannot be changed.
-@XmlRootElement (name = "User")
-@XmlType(propOrder = { "userId", "userName", "email", "password" })
+@XmlRootElement (name = "user")
 public class User {
 	@NotNull
 	private int userId;
@@ -46,7 +45,7 @@ public class User {
 		this.hash = hash;
 		this.salt = salt;
 	}
-
+	
 	@XmlElement
 	@JsonProperty
 	public int getUserId() {
@@ -71,15 +70,37 @@ public class User {
 		return password;
 	}
 	
-	@XmlElement
 	@JsonProperty
 	public String getHash() {
 		return hash;
 	}
 	
-	@XmlElement
 	@JsonProperty
 	public String getSalt() {
 		return salt;
+	}
+	
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setHash(String hash) {
+		this.hash = hash;
+	}
+
+	public void setSalt(String salt) {
+		this.salt = salt;
 	}
 }

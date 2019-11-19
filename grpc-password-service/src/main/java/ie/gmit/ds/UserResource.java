@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response.Status;
 import com.google.protobuf.BoolValue;
 
 @Path("/user")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class UserResource {
 
@@ -39,10 +39,16 @@ public class UserResource {
 	}
 	
 	@POST
-	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response addUser(User user) {
-		if(user == null) {
+		
+		System.out.println(user.getUserId());
+		System.out.println(user.getUserName());
+		System.out.println(user.getEmail());
+		System.out.println(user.getPassword());
+		
+		int userId = user.getUserId();
+		
+		if(userId == 0) {
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 		User newUser = client.makePassword(user);
