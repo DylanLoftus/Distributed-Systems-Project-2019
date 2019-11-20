@@ -1,5 +1,7 @@
 package ie.gmit.ds;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,123 +19,131 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.protobuf.BoolValue;
+import com.google.protobuf.ByteString;
 
 // This class can take in JSON and XML
 // It can also send out JSON and XML
 @Path("/user")
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class UserResource {
 
 	// Instance Variables
-	private HashMap<Integer, User> userMap = new HashMap<>();
+	private HashMap<Integer, UserResponse> userMapResponse = new HashMap<>();
 	private boolean loginTrue;
 
 	// Get an instance of the client.
 	PasswordClient client = new PasswordClient("localhost", 50551);
-	
+
 	public UserResource() {
-		// Dummy user, to test get request.
-		User testUser = new User(1, "Lala", "lala@gmail.com", "super");
-		userMap.put(testUser.getUserId(), testUser);
+
 	}
-	
+
 	// Method that returns a list of users.
 	@GET
-	public List<User> getUsers() {
-	    return new ArrayList<User>(userMap.values());
+	public List<UserResponse> getUsers() {
+		return new ArrayList<UserResponse>(userMapResponse.values());
 	}
-	
-	// Method that adds a suer to the userMap.
+
 	@POST
-	public Response addUser(User user) {
+	public Response addUser(User user) throws UnsupportedEncodingException {
 		
-		// Store userId and check to see if it's not null.
-		int userId = user.getUserId();
-		
-		if(userId == 0) {
-			return Response.status(Response.Status.NOT_FOUND).build();
+		if(user == null) {
+			return Response.status(400).build();
 		}
-		// Call on our GRPC service to make a password for our user.
-		// Return it into a User Object.
-		User newUser = client.makePassword(user);
-		// Add to map.
-		userMap.put(newUser.getUserId(), newUser);
-		// Return 200 response.
-		return Response.ok(newUser).build();
+		
+		client.makePassword(user.getUserId(), user.getPassword());
+		
+		// Convert to String
+		//String hashedString = new String(client.getHashedPassword().toByteArray(), "ISO-8859-1");
+		//String saltString = new String(client.getSalt().toByteArray(), "ISO-8859-1");
+
+		ByteString hashedString = client.getHashedPassword();
+		ByteString saltString = client.getSalt();
+		
+		UserResponse userResponse = new UserResponse(user.getUserId(), user.getUserName(), user.getEmail(), new String(hashedString.toByteArray(), Charset.defaultCharset()), new String(saltString.toByteArray(), Charset.defaultCharset()));
+		userMapResponse.put(userResponse.getUserId(), userResponse);
+		return Response.status(200).build();
 	}
-	
+
 	// Method to get info on specific user.
 	@Path("/{userId}")
 	@GET
 	public Response getUserById(@PathParam("userId") int id) {
 		// If the User doesn't exist.
-		if(userMap.get(id) == null) {
+		if (userMapResponse.get(id) == null) {
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 		// If the User exists return it.
 		else {
-			return Response.ok(userMap.get(id)).build();
+			return Response.ok(userMapResponse.get(id)).build();
 		}
-		
+
 	}
-	
+
 	// Method that changes a user's info.
 	@Path("/{userId}")
 	@PUT
-	public Response changeUser(User user, @PathParam("userId") int id) {
+	public Response changeUser(User user, @PathParam("userId") int id) throws UnsupportedEncodingException {
 		// If the request is bad.
-		if(user == null || userMap.get(id) == null) {
+		if (user == null || userMapResponse.get(id) == null) {
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 		// Remove and add new User details and send a 200 response.
 		else {
-			userMap.remove(id);
-			User newUserPut = client.makePassword(user);
-			userMap.put(newUserPut.getUserId(), newUserPut);
-			return Response.ok(newUserPut).build();
+			userMapResponse.remove(id);
+			
+			client.makePassword(user.getUserId(), user.getPassword());
+			
+			// Convert to String
+			ByteString hashedString = client.getHashedPassword();
+			ByteString saltString = client.getSalt();
+			
+			UserResponse userResponse = new UserResponse(user.getUserId(), user.getUserName(), user.getEmail(), new String(hashedString.toByteArray()), new String(saltString.toByteArray()));
+			userMapResponse.put(userResponse.getUserId(), userResponse);
+			return Response.ok(userResponse).build();
 		}
-		
+
 	}
-	
+
 	// Method that removes a user from the map.
 	@Path("/{userId}")
 	@DELETE
-	public Response deleteUser(@PathParam("userId") int id){
+	public Response deleteUser(@PathParam("userId") int id) {
 		// If the User doesn't exist.
-		if(userMap.get(id) == null) {
+		if (userMapResponse.get(id) == null) {
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 		// If the User exists delete it from the map.
 		else {
-			userMap.remove(id);
+			userMapResponse.remove(id);
 			return Response.ok().build();
 		}
 	}
+
 	
-	// Method that logs a user in.
-	@Path("/{userId}/login/{password}")
+	@Path("/login")
 	@POST
-	public Response loginUser(@PathParam("userId") int id, @PathParam("password") String password){
+	public Response loginUser(Login login) throws UnsupportedEncodingException {
+		UserResponse userResponse = userMapResponse.get(login.getUserId());
 		
-		// Get the User we're trying to login.
-		User checkUser = userMap.get(id);
+		byte[] pArr = userResponse.getHash().getBytes(Charset.defaultCharset());
+		byte[] sArr = userResponse.getSalt().getBytes(Charset.defaultCharset());
+
+		byte[] test = Passwords.hash(login.getPassword().toCharArray(), sArr);
 		
-		System.out.println(checkUser.getUserId());
-		System.out.println(password);
+		String testString = new String(test, Charset.defaultCharset());
 		
+		System.out.println(userResponse.getHash());
+		System.out.println(testString);
 		
+		ByteString pBs = ByteString.copyFrom(pArr);
+		ByteString sBs = ByteString.copyFrom(sArr);
 		
-		// Send that User and the password entered to the GRPC validate method.
-		loginTrue = client.validate(password, checkUser.getHash(), checkUser.getSalt());
+		loginTrue = client.validate(login.getPassword(), pBs, sBs);
 		
-		// If the result is true, the passwords match.
-		if(loginTrue) {
-			return Response.ok().build();
-		}
-		// Passwords don't match.
-		else {
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
+		String res = "" + loginTrue;
+	
+		return Response.status(200).entity(res).build();
 	}
 }
